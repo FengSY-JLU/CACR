@@ -10,6 +10,12 @@ The paper is currently under review.
 
 The code, pretrained models, and instructions will be continuously updated.
 
+## Project Workflow
+
+<p align="center">
+  <img src="figures/flowchart.png" width="800" alt="Project Workflow">
+</p>
+
 # Installation
 
 Environment Requirements:
