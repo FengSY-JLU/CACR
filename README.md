@@ -28,11 +28,14 @@ pip install -r requirements.txt
 (Optional) Use Tsinghua mirror for faster download in China:
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
+### Pretrained Models
 
-# Pretrained Models
-You can download pretrained models from the link below:
-Download Pretrained Model
-After downloading, place the model in the checkpoints/ folder or load it manually in your inference script.
+You can download the pretrained model here:
+
+[**Download Pretrained Model**](https://drive.google.com/file/d/1DkUYBEzvcB5S-o7Zzc0kdOl9hb2eYih5/view?usp=drive_link)
+
+After downloading, place the `.pth` file into the `checkpoints/` folder (create it if it doesn't exist).  
+Please also specify the corresponding `--learned_priors` combination when training or testing.
 
 # Usage / Training
 
