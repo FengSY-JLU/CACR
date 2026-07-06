@@ -43,11 +43,12 @@ You can download the pretrained model here:
 After downloading, place the `.pth` file into the `checkpoints/` folder (create it if it doesn't exist).  
 Please also specify the corresponding `--learned_priors` combination when training or testing.
 
-# Usage / Training
+### Usage / Training
 
-1. Quick Start
+#### Quick Start
 
-Bashpython train.py \
+```bash
+python train.py \
   --nEpochs 200 \
   --batchSize 1 \
   --lr 1e-4 \
@@ -56,22 +57,29 @@ Bashpython train.py \
   --data_train ./Dataset/UIE/UIEBD/train/image \
   --label_train ./Dataset/UIE/UIEBD/train/label \
   --indicator my_experiment_v1
-
-2. Examples
-
+Test Commands for Different Datasets
+Here are recommended --learned_priors combinations for different datasets:
+1. UIEBD
+Bashpython train.py --learned_priors udcp,clahee,ruie --indicator UIEBD_experiment
+2. UFO120
+Bashpython train.py --learned_priors clahe,unsharpmask,ruie --indicator UFO120_experiment
+3. RUIE
+Bashpython train.py --learned_priors msrcr,hdp --indicator RUIE_experiment
+4. OceanDark
+Bashpython train.py --learned_priors clahe,udcp,unsharpmask --indicator OceanDark_experiment
+Examples
 Quick test run:
 Bashpython train.py --nEpochs 1 --batchSize 1 --debug True --indicator test_run
-Full training example:
+Standard training:
 Bashpython train.py \
   --nEpochs 300 \
   --indicator UIEBD_refined_model_v2 \
   --lr 1e-4 \
   --threads 6
-  
-3. Checkpoints
-
-Location: checkpoints/{indicator}/{dataset}_final.pth
-Each checkpoint contains model weights, training config, and runtime state.
+Checkpoints
+Checkpoints are automatically saved at:
+textcheckpoints/{indicator}/{dataset}_final.pth
+For example: checkpoints/UIEBD_refined_model_v2/UIEBD_final.pth
 
 
 ## Citation
