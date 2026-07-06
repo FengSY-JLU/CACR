@@ -246,7 +246,7 @@ def low_freq_color_structure_loss(I_ref, I_syn, k=15, eps=1e-6):
 
 
 # ============================================================
-# NEW: Color Direction Distillation Loss (带数值保护)
+# NEW: Color Direction Distillation Loss 
 # ============================================================
 def color_direction_distillation_loss(I_ref, I_syn, eps=1e-8):
     I_ref = torch.clamp(I_ref, 0.0, 1.0)
@@ -269,7 +269,7 @@ def color_direction_distillation_loss(I_ref, I_syn, eps=1e-8):
     mask = chroma_mask(I_syn.detach())
     loss = (mask * torch.abs(dir_r - dir_s)).mean()
 
-    # 仅保留极轻的 nan_to_num
+    #  nan_to_num
     loss = torch.nan_to_num(loss, nan=0.0, posinf=0.0, neginf=0.0)
     return loss
 
@@ -345,35 +345,6 @@ def edge_aware_illumination_loss(I, eps=1e-3):
 
     return loss_x + loss_y
 
-# ====================================================
-# high frequency 
-# ====================================================
-
-# def edge_preservation_loss(I_ref, I_syn):
-
-#     gray_ref = (
-#         0.299*I_ref[:,0:1]
-#         +0.587*I_ref[:,1:2]
-#         +0.114*I_ref[:,2:3]
-#     )
-
-#     gray_syn = (
-#         0.299*I_syn[:,0:1]
-#         +0.587*I_syn[:,1:2]
-#         +0.114*I_syn[:,2:3]
-#     )
-
-#     gx_ref = gray_ref[:, :, :, 1:] - gray_ref[:, :, :, :-1]
-#     gy_ref = gray_ref[:, :, 1:, :] - gray_ref[:, :, :-1, :]
-
-#     gx_syn = gray_syn[:, :, :, 1:] - gray_syn[:, :, :, :-1]
-#     gy_syn = gray_syn[:, :, 1:, :] - gray_syn[:, :, :-1, :]
-
-#     return (
-#         F.l1_loss(gx_ref, gx_syn.detach())
-#         +
-#         F.l1_loss(gy_ref, gy_syn.detach())
-#     )
 
 def detail_preserve_loss(
     I_ref,
@@ -505,49 +476,6 @@ def gradient_direction_consistency_loss(
 
     return loss_x + loss_y
 
-# ============================================================
-# floor loss
-# ============================================================
-
-def luminance_floor(I, min_luma=0.03):
-    Y = 0.299*I[:,0] + 0.587*I[:,1] + 0.114*I[:,2]
-    return F.relu(min_luma - Y).mean()
-
-def contrast_floor_loss(I_ref, min_std=0.05):
-    """
-    保证亮度标准差不低于 min_std
-    """
-    Y = 0.299*I_ref[:,0] + 0.587*I_ref[:,1] + 0.114*I_ref[:,2]
-    std = Y.view(Y.shape[0], -1).std(dim=1)
-    return F.relu(min_std - std).mean()
-
-# ============================================================
-# synthesis_optimal
-# ============================================================
-def loss_synthesis_optimal(I_syn, prior_list, eps=1e-6):
-    """
-    Make synthesis lie in the consensus region of priors.
-
-    Args:
-        I_syn: (B,3,H,W)
-        prior_list: List[(B,3,H,W)]
-
-    Returns:
-        scalar loss
-    """
-
-    loss = 0.0
-    B = I_syn.shape[0]
-
-    # ---- normalize to avoid brightness domination ----
-    I_syn_n = I_syn / (I_syn.mean(dim=(2,3), keepdim=True) + eps)
-
-    for P in prior_list:
-        P_n = P / (P.mean(dim=(2,3), keepdim=True) + eps)
-
-        loss += F.l1_loss(I_syn_n, P_n.detach())
-
-    return loss / max(len(prior_list), 1)
 
 # ============================================================
 # relative_improvement_loss
@@ -631,25 +559,6 @@ def loss_prior(I_refined, prior_list, I_synthesis, temperature=0.1, eps=1e-6):
 
     return loss
 
-# ======================================================
-# refined img absolute quilaty 
-# ======================================================
-
-def weak_absolute_quality_loss(I, quality_fn=None):
-
-    if quality_fn is None:
-        from src.model import losses_ranking
-        quality_fn = losses_ranking.compute_quality_absolute
-
-    scores = quality_fn(I)
-
-    # stabilize
-    scores = torch.tanh(scores)
-
-    loss = 1.0 - scores.mean()
-
-    return loss
-
 
 # =============================================================
 # offsets alignment contribution
@@ -724,82 +633,6 @@ def compute_offset_contribution(
 
     return torch.stack(scores, dim=1)  # (B,K)
 
-def contribution_alignment_loss(
-    att_map,
-    I_ref,
-    weighted_offsets,
-    synthesis,
-    model,
-    quality_fn=None,
-    temperature=1.0
-):
-    """
-    Align COMO attention with offset contribution.
-
-    IMPORTANT:
-    - synthesis is NOT part of contribution candidates
-    - synthesis is ALWAYS preserved
-    """
-
-    if quality_fn is None:
-        from src.model import losses_ranking
-        quality_fn = losses_ranking.quality_score_light
-
-    # ----------------------------------------
-    # contribution scores
-    # ----------------------------------------
-    scores = compute_offset_contribution(
-        I_ref=I_ref,
-        weighted_offsets=weighted_offsets,
-        synthesis=synthesis,
-        model=model,
-        quality_fn=quality_fn
-    )
-
-    conf = scores.abs().mean()
-
-    if conf < 0.005:
-        return torch.tensor(
-            0.0,
-            device=I_ref.device
-        )
-    # ----------------------------------------
-    # attention pooling
-    # att_map MUST correspond ONLY to offsets
-    # ----------------------------------------
-    att = att_map.mean(dim=(2,3,4))  # (B,K)
-
-    pred = F.softmax(
-        att / temperature,
-        dim=1
-    )
-
-    scores = scores.detach()
-
-    scores = scores - scores.mean(dim=1, keepdim=True)
-
-    scores = torch.clamp(scores, -0.1, 0.1)
-
-    target = F.softmax(
-        scores / temperature,
-        dim=1
-    )
-
-    # ----------------------------------------
-    # confidence gating
-    # ----------------------------------------
-    conf = scores.abs().mean(dim=1, keepdim=True)
-
-    valid_mask = (conf >= 0.005).float()
-
-    loss = ((pred - target.detach()) ** 2).mean(
-        dim=1,
-        keepdim=True
-    )
-
-    loss = loss * valid_mask
-
-    return loss.mean()
 
 def contributor_manifold_loss(
     I_refined,
@@ -939,43 +772,16 @@ def compute_total_loss(
     loss_gra = gradient_direction_consistency_loss(I_refined, I_synthesis)
 
 
-    # loss_lum_floor = luminance_floor(I_refined)
-
-    # loss_contrast_floor = contrast_floor_loss(I_refined)
-
-    loss_synth_opt = loss_synthesis_optimal(I_synthesis, priors)
-
     loss_rel_improve = relative_improvement_loss(I_refined, I_synthesis,margin=0.05)
 
     loss_prior_reg = contributor_manifold_loss(I_refined, priors, I_synthesis)
 
-    loss_absolute_quailty = weak_absolute_quality_loss(I_refined)
-
-    loss_offset_align = torch.tensor(0.0, device=I_refined.device)
-
-    # 只在满足条件时才计算这个昂贵的 loss
-    if iteration % 10 == 0 and model is not None and attn_offset_only is not None:
-        loss_offset_align = contribution_alignment_loss(
-            att_map=attn_offset_only,   # VERY IMPORTANT
-            I_ref=I_refined,
-            weighted_offsets=weighted_offsets,
-            synthesis=I_synthesis,
-            model=model,
-        )
 
     w = stop_color_warmup(epoch)
-
-    # ---------- Warm-up factors ----------
-    # Stage A-D 权重随 epoch 平滑增加
-    w_rel = color_warmup_factor(epoch, start=20)    # relative improvement
-    w_color = color_warmup_factor(epoch, start=80) # color direction
-    w_contrib = color_warmup_factor(epoch, start=150) # contribution alignment
-    w_absq = color_warmup_factor(epoch, start=150) # weak absolute quality
 
     total = (
 
         # ---------- Stage1 ----------
-        # 0.1 * loss_synth_opt
         0.01 * loss_cas_entropy
         # ---------- Stage2 ----------
         + 0.2 * loss_gain
@@ -988,42 +794,21 @@ def compute_total_loss(
         + 0.1 * loss_rel_improve
         # ---------- direction stability ----------
         + 0.05 * loss_color_struct
-        + w * 0.005 * loss_color_direction
-        # ---------- base ----------
-        + w_contrib * 0.01 * loss_offset_align
-        # + w_absq * 0.01 * loss_absolute_quailty
-        
+        + w * 0.005 * loss_color_direction      
     )
-
-    # Check NaN or Inf in each loss and log if detected
-    for loss_name, loss_value in zip(
-        ["red_cyan_cons", "cyan_cons", "gray_cons", "lum_anchor", "struct_gain", 
-         "struct_lb", "syn_floor", "brightness", "chroma_free", "rc_soft", 
-         "red_cyan_dir", "color_distill", "color_struct", "illum_smooth"],
-        [loss_lum, loss_gain, loss_color_struct, loss_illum]
-    ):
-        if torch.isnan(loss_value).any() or torch.isinf(loss_value).any():
-            with open("debug_crash.log", "a") as f:
-                f.write(f"{epoch},{loss_name},NaN_or_Inf_detected\n")
-            print(f"[NaN/Inf] {loss_name} is NaN or Inf at epoch {epoch}")
 
     loss_dict = {
         "total_loss": total.item(),
         "lum_anchor": loss_lum.item(),
         "struct_gain": loss_gain.item(),
-        # "cas_entropy": loss_cas_entropy.item(),
-        "synth_optimal": loss_synth_opt.item(),
+        "cas_entropy": loss_cas_entropy.item(),
         "rel_improve": loss_rel_improve.item(),
         "color_struct": loss_color_struct.item(),
         "prior_reg": loss_prior_reg.item(),
         "illum_smooth": loss_illum.item(),
         "detail_preseve": loss_detail_pre.item(),
         "gradiant": loss_gra.item(),
-        # "lum_floor": loss_lum_floor.item(),
-        # "contrast_floor": loss_contrast_floor.item(),
-        # "color_direction": loss_color_direction.item(),
-        "offset_contribution": loss_offset_align.item(),
-        "absolute_quailty": loss_absolute_quailty.item(),
+        "color_direction": loss_color_direction.item(),
     }
 
     return total, loss_dict

@@ -1,0 +1,45 @@
+# Core Deep Learning
+torch==2.7.1+cu118
+torchvision==0.22.1+cu118
+torchaudio==2.7.1+cu118
+
+# Scientific Computing & Visualization
+numpy
+scipy
+pandas
+matplotlib
+pillow
+opencv-python
+scikit-image
+
+# Model & Architecture
+timm
+einops
+mamba-ssm
+transformers
+huggingface-hub
+safetensors
+accelerate
+
+# Utils & Training
+tqdm
+pyyaml
+psutil
+joblib
+tqdm
+
+# Image Quality & Metrics
+lpips
+torchmetrics
+pytorch-fid
+piq
+pyiqa
+
+# Others (commonly used in this project)
+pyyaml
+addict
+yacs
+fvcore
+iopath
+tensorboard
+tensorboardx

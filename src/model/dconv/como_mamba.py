@@ -390,7 +390,7 @@ class COMO_Mamba(nn.Module):
         # Soft-pruning (training only)
         # -------------------------------
         if self.training:
-            # 你可以把 lambda_prune 设成成员变量或外部传入
+            #  lambda_prune 
             lambda_prune = getattr(self, "lambda_prune", 0.05)
             att = soft_prune_attention(att, lambda_prune)
 
@@ -406,7 +406,7 @@ class COMO_Mamba(nn.Module):
         # clip to prevent early epoch collapse
         dw_out = self.dwmlp(recon)
         lambda_map = torch.sigmoid(self.gating_conv(recon))
-        dw_out = torch.clamp(dw_out, -0.5, 0.5)   # 可根据数值适当调整范围
+        dw_out = torch.clamp(dw_out, -0.5, 0.5)  
         hybrid = lambda_map * recon + (1.0 - lambda_map) * dw_out
 
         # 7) projection + upsample

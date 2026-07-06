@@ -10,7 +10,6 @@ import numpy as np
 # =========================================================
 
 # def color_score(img):
-#     # 灰度世界偏差（越小越好 → 取负）
 #     mean = img.mean(dim=[2,3])  # (B,3)
 #     gray = mean.mean(dim=1, keepdim=True)
 #     return - (mean - gray).abs().mean(dim=1)  # (B,)
@@ -30,7 +29,7 @@ def entropy_score(img):
     return ent
 
 def chroma_score(img):
-    # RGB → Lab（近似）
+    # RGB → Lab
     R, G, B = img[:,0], img[:,1], img[:,2]
 
     rg = R - G
@@ -40,7 +39,7 @@ def chroma_score(img):
 
 def color_balance_score(img):
     std = img.std(dim=[2,3])  # (B,3)
-    return - std.std(dim=1)   # 通道之间越接近越好
+    return - std.std(dim=1)   
 
 def naturalness_score(img):
     mean = img.mean(dim=[2,3])
@@ -93,13 +92,13 @@ def compute_quality_scores(I_k_list):
 #     scores = []
 
 #     for img in dir_outputs:
-#         # ✅ 结构一致（per-sample）
+#         # ✅ （per-sample）
 #         s_struct = - (img - I_synthesis).abs().mean(dim=[1,2,3])
 
-#         # ✅ 偏移幅度
+#         # ✅ 
 #         s_dev = - (img - I_synthesis).abs().mean(dim=[1,2,3])
 
-#         # ✅ 对比度
+#         # ✅ contrast
 #         s_contrast = img.std(dim=[1,2,3])
 
 #         s = 0.5 * s_struct + 0.3 * s_dev + 0.2 * s_contrast
@@ -145,7 +144,7 @@ def compute_quality_absolute(img):
 # Light-weight Quality for contribution computation
 # ============================================================
 def quality_score_light(I,eps=1e-6):
-    """轻量化，用于 compute_offset_contribution"""
+    """ compute_offset_contribution"""
     chroma = chroma_score(I)
     contrast = contrast_score(I)
     entropy = entropy_score(I)
@@ -293,55 +292,3 @@ def enhancement_perceptual_score(
     )
 
     return score
-
-# =========================================================
-# ✅ Debug Visualization
-# =========================================================
-
-def save_debug_images(
-    I_input,
-    I_synthesis,
-    I_refined,
-    offsets,
-    debug_info,
-    save_dir,
-    step,
-    max_save=2
-):
-    """
-    保存可视化：
-    - synthesis
-    - refined
-    - I_k (每个方向)
-    """
-
-    os.makedirs(save_dir, exist_ok=True)
-
-    B = I_input.shape[0]
-    K = len(offsets)
-
-    scores = debug_info["scores"].cpu().numpy()
-    att    = debug_info["att"].cpu().numpy()
-
-    for b in range(min(B, max_save)):
-        base = f"{save_dir}/step{step}_b{b}"
-
-        def to_img(x):
-            x = x[b].detach().cpu().permute(1,2,0).numpy()
-            x = np.clip(x, 0, 1)
-            x = (x * 255).astype(np.uint8)
-            return x
-
-        # 保存主图
-        cv2.imwrite(base + "_syn.png", to_img(I_synthesis))
-        cv2.imwrite(base + "_ref.png", to_img(I_refined))
-
-        # 每个方向
-        for k in range(K):
-            I_k = I_synthesis + offsets[k]
-            img = to_img(I_k)
-
-            cv2.imwrite(
-                base + f"_k{k}_score{scores[b,k]:.3f}_att{att[b,k]:.3f}.png",
-                img
-            )

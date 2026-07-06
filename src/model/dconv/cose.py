@@ -65,7 +65,7 @@ class ColorShiftEstimation(nn.Module):
 
         p = self._get_sampling_locations(offset, x_pad, H, W)
 
-        # 🔥 关键稳定点：detach floor
+        # detach floor
         q_lt = p.detach().floor()
         q_rb = q_lt + 1
 
@@ -92,7 +92,6 @@ class ColorShiftEstimation(nn.Module):
         g_rt = (1 - (q_rt[..., :N].type_as(p) - p[..., :N])) * \
                (1 + (q_rt[..., N:].type_as(p) - p[..., N:]))
 
-        # 🔥 稳定化（比 clamp 更平滑）
         g_lt = torch.tanh(g_lt) * 2.0
         g_rb = torch.tanh(g_rb) * 2.0
         g_lb = torch.tanh(g_lb) * 2.0
@@ -126,13 +125,12 @@ class ColorShiftEstimation(nn.Module):
 
         out = self.final_conv(x_offset)
 
-        # 🔥 最终保险（防 NaN 扩散）
         out = torch.nan_to_num(out, 0.0, 0.0, 0.0)
 
         return out
 
     # ==========================================================
-    # Helper functions（保持你原来的逻辑）
+    # Helper functions
     # ==========================================================
 
     def _get_sampling_locations(self, offset, x, H, W):

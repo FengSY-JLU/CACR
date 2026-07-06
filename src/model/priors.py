@@ -395,16 +395,9 @@ class UnsharpMask(PriorBase):
 
         return torch.clamp(sharp,0,1)
 
-# ----------------------------------------------
-#               Gray-World Prior
-# ----------------------------------------------
+
 def gray_world_adjust(img):
-    """
-    基于灰度世界假设对三通道图像进行线性颜色校正。
-    输入: img (B,3,H,W)
-    输出: 校正后的图像 (B,3,H,W)
-    注意: 假设 img 是 Linear RGB，灰度世界假设在线性空间中成立。
-    """
+    
     mean_rgb = img.mean(dim=[2,3], keepdim=True)
     mean_gray = mean_rgb.mean(dim=1, keepdim=True)
     scale = mean_gray / (mean_rgb + 1e-8)
@@ -619,20 +612,16 @@ def build_restormer_prior(
 # Utility: build a default prior module list
 # -------------------------------------------------------------------------
 def default_priors(device: torch.device, learned_prior_cfgs: str = None):
-    """
-    返回所有 prior 模块列表。
-    如果提供 restormer_path，则加入 Restormer 作为最强 prior。
-    """
+   
     priors = [
-        # UDCPColorRestorationHighQuality(omega=0.8, t0=0.05, kernel_size=15, top_percent=0.001),
+        UDCPColorRestorationHighQuality(omega=0.8, t0=0.05, kernel_size=15, top_percent=0.001),
         CLAHEEnhancement(clip_limit=2.0, tile_grid_size=(8,8)),
-        # MSRCRRetinex(scales=(15,80,250)),
+        MSRCRRetinex(scales=(15,80,250)),
         UnsharpMask(amount=1.5, kernel=5),
-        # HDPPrior(),
-        # GrayWorldCompensator()
+        HDPPrior(),
+        GrayWorldCompensator()
     ]
     
-    # 可选加入 Restormer learned prior（建议放在最后，权重更高）
     if learned_prior_cfgs is not None:
 
         for cfg in learned_prior_cfgs:

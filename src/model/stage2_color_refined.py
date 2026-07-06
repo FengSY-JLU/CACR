@@ -104,12 +104,6 @@ class Stage2ColorRefine(nn.Module):
         como_out = self.como(final_offsets)
         I_refined = torch.clamp(como_out["Iy"], 0.0, 1.0)
 
-        # new version
-        # raw_out = como_out["Iy"]
-        # residual = raw_out - I_synthesis
-        # I_refined = torch.clamp(I_synthesis + residual, 0, 1)
-
-
         self.last_cas_weights = cas_weights
 
         # --------------------------------------------------
