@@ -47,41 +47,44 @@ Please also specify the corresponding `--learned_priors` combination when traini
 
 #### Quick Start
 
-```bash
-python train.py \
-  --nEpochs 200 \
-  --batchSize 1 \
-  --lr 1e-4 \
-  --patch_size 128 \
-  --threads 4 \
-  --data_train ./Dataset/UIE/UIEBD/train/image \
-  --label_train ./Dataset/UIE/UIEBD/train/label \
-  --indicator my_experiment_v1
-Test Commands for Different Datasets
-Here are recommended --learned_priors combinations for different datasets:
-1. UIEBD
-Bashpython train.py --learned_priors udcp,clahee,ruie --indicator UIEBD_experiment
-2. UFO120
-Bashpython train.py --learned_priors clahe,unsharpmask,ruie --indicator UFO120_experiment
-3. RUIE
-Bashpython train.py --learned_priors msrcr,hdp --indicator RUIE_experiment
-4. OceanDark
-Bashpython train.py --learned_priors clahe,udcp,unsharpmask --indicator OceanDark_experiment
-Examples
-Quick test run:
-Bashpython train.py --nEpochs 1 --batchSize 1 --debug True --indicator test_run
-Standard training:
-Bashpython train.py \
-  --nEpochs 300 \
-  --indicator UIEBD_refined_model_v2 \
-  --lr 1e-4 \
-  --threads 6
-Checkpoints
-Checkpoints are automatically saved at:
-textcheckpoints/{indicator}/{dataset}_final.pth
-For example: checkpoints/UIEBD_refined_model_v2/UIEBD_final.pth
+  ```bash
+  python train.py \
+    --nEpochs 200 \
+    --batchSize 1 \
+    --lr 1e-4 \
+    --patch_size 128 \
+    --threads 4 \
+    --data_train ./Dataset/UIE/UIEBD/train/image \
+    --label_train ./Dataset/UIE/UIEBD/train/label \
+    --indicator my_experiment_v1
+  ```
+  Test Commands for Different Datasets
+  Here are recommended --learned_priors combinations for different datasets:
+  1. UIEBD
+  python train.py --learned_priors udcp,clahee,ruie --indicator UIEBD_experiment
+  2. UFO120
+  python train.py --learned_priors clahe,unsharpmask,ruie --indicator UFO120_experiment
+  3. RUIE
+  python train.py --learned_priors msrcr,hdp --indicator RUIE_experiment
+  4. OceanDark
+  python train.py --learned_priors clahe,udcp,unsharpmask --indicator OceanDark_experiment
+  Examples
+  Quick test run:
+  python train.py --nEpochs 1 --batchSize 1 --debug True --indicator test_run
+  Standard training:
+  ```bash
+  python train.py \
+    --nEpochs 300 \
+    --indicator UIEBD_refined_model_v2 \
+    --lr 1e-4 \
+    --threads 6
+  ```
+  Checkpoints
+  Checkpoints are automatically saved at:
+  textcheckpoints/{indicator}/{dataset}_final.pth
+  For example: checkpoints/UIEBD_refined_model_v2/UIEBD_final.pth
+  
 
-
-## Citation
+#### Citation
 
 Coming soon.
