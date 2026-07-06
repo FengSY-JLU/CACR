@@ -81,6 +81,18 @@ Please also specify the corresponding `--learned_priors` combination when traini
   ```bash
   python train.py --nEpochs 1 --batchSize 1 --debug True --indicator test_run
   ```
+  ### Quick Inference Test
+
+  You can use the following script for fast testing with a trained model:
+
+  ```bash
+  python test_inference.py \
+    --image ./test_images/test_001.png \
+    --checkpoint checkpoints/UIEBD_final/UIEBD_final.pth \
+    --learned_priors udcp,clahee,ruie \
+    --output result.png
+  ```
+
   Standard training:
   ```bash
   python train.py \
