@@ -61,16 +61,26 @@ Please also specify the corresponding `--learned_priors` combination when traini
   Test Commands for Different Datasets
   Here are recommended --learned_priors combinations for different datasets:
   1. UIEBD
+  ```bash
   python train.py --learned_priors udcp,clahee,ruie --indicator UIEBD_experiment
+  ```
   2. UFO120
+  ```bash
   python train.py --learned_priors clahe,unsharpmask,ruie --indicator UFO120_experiment
+  ```
   3. RUIE
+  ```bash
   python train.py --learned_priors msrcr,hdp --indicator RUIE_experiment
+  ```
   4. OceanDark
+  ```bash
   python train.py --learned_priors clahe,udcp,unsharpmask --indicator OceanDark_experiment
+  ```
   Examples
   Quick test run:
+  ```bash
   python train.py --nEpochs 1 --batchSize 1 --debug True --indicator test_run
+  ```
   Standard training:
   ```bash
   python train.py \
