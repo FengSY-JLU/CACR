@@ -31,9 +31,6 @@ cd <your-repo-name>
 2. Install dependencies
 pip install -r requirements.txt
 
-(Optional) Use Tsinghua mirror for faster download in China:
-pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-
 ### Pretrained Models
 
 You can download the pretrained model here:
