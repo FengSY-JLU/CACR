@@ -70,7 +70,7 @@ Bashpython train.py \
   
 3. Checkpoints
 
-Location: checkpoints/{indicator}/model_epoch_{epoch}.pth
+Location: checkpoints/{indicator}/{dataset}_final.pth
 Each checkpoint contains model weights, training config, and runtime state.
 
 
